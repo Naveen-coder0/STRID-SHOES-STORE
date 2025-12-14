@@ -101,7 +101,7 @@ const Terms = () => {
                 <p>
                   We offer a 30-day return policy for unworn items in their original 
                   packaging. To initiate a return, please contact our support team at 
-                  support@strideshoes.com.
+                  naveen.maan2006@gmail.com
                 </p>
                 <p>
                   Refunds will be processed within 7-10 business days after we receive 
@@ -153,7 +153,7 @@ const Terms = () => {
                   For any questions regarding these terms, please contact us:
                 </p>
                 <p className="text-foreground">
-                  Email: <a href="mailto:support@strideshoes.com" className="text-primary hover:underline">support@strideshoes.com</a>
+                  Email: <a href="mailto:naveen.maan2006@gmail.com" className="text-primary hover:underline">naveen.maan2006@gmail.com</a>
                 </p>
               </section>
             </div>
