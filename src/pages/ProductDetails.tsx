@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ShieldCheck, Truck, RotateCcw } from "lucide-react";
@@ -12,15 +12,28 @@ const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ✅ STATE (INSIDE COMPONENT)
+  const product = products.find((p) => p.id === id);
+
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const product = products.find((p) => p.id === id);
+  // 🔥 IMAGE SLIDER STATE
+  const [currentImage, setCurrentImage] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
 
-  const relatedProducts = products
-    .filter((p) => p.category === product?.category && p.id !== id)
-    .slice(0, 4);
+  // 🔁 AUTO IMAGE CHANGE (NO BLINK)
+  useEffect(() => {
+    if (!product || product.images.length <= 1) return;
+    if (isHovering) return;
+
+    const interval = setInterval(() => {
+      setCurrentImage((prev) =>
+        prev === product.images.length - 1 ? 0 : prev + 1
+      );
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [isHovering, product]);
 
   if (!product) {
     return (
@@ -35,18 +48,15 @@ const ProductDetails = () => {
     );
   }
 
-  // ✅ TOTAL PRICE BASED ON QUANTITY
   const totalPrice = product.price * quantity;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       maximumFractionDigits: 0,
     }).format(price);
-  };
 
-  // ✅ PAY NOW HANDLER
   const handlePayNow = () => {
     if (!selectedSize) {
       toast({
@@ -58,14 +68,18 @@ const ProductDetails = () => {
     }
 
     const paymentUrl =
-      `https://payment-system-tau.vercel.app/` +
-      `?name=${encodeURIComponent(product.name)}` +
+      `https://payment-system-tau.vercel.app/?` +
+      `name=${encodeURIComponent(product.name)}` +
       `&price=${totalPrice}` +
       `&qty=${quantity}` +
       `&size=${selectedSize}`;
 
     window.location.href = paymentUrl;
   };
+
+  const relatedProducts = products
+    .filter((p) => p.category === product.category && p.id !== id)
+    .slice(0, 4);
 
   return (
     <>
@@ -92,13 +106,22 @@ const ProductDetails = () => {
 
             <div className="grid lg:grid-cols-2 gap-12">
 
-              {/* IMAGE */}
-              <div className="relative aspect-square rounded-3xl overflow-hidden bg-secondary">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+              {/* 🔥 IMAGE WITH FADE ANIMATION */}
+              <div
+                className="relative aspect-square rounded-3xl overflow-hidden bg-secondary"
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
+              >
+                {product.images.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={product.name}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+                      index === currentImage ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                ))}
               </div>
 
               {/* DETAILS */}
@@ -160,7 +183,7 @@ const ProductDetails = () => {
 
                 {/* TRUST */}
                 <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                  {[
+                  {[ 
                     { icon: ShieldCheck, label: "Authentic" },
                     { icon: Truck, label: "Fast Delivery" },
                     { icon: RotateCcw, label: "Easy Returns" },
@@ -173,7 +196,6 @@ const ProductDetails = () => {
                     </div>
                   ))}
                 </div>
-
               </div>
             </div>
 

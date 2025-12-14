@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Product } from "@/data/products";
 
 interface ProductCardProps {
@@ -8,13 +9,27 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const images = product.images;
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const [fade, setFade] = useState(true);
+
+  // 🔁 Auto image slider
+  useEffect(() => {
+    if (isHovering || images.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setFade(false); // fade out
+      setTimeout(() => {
+        setCurrentIndex((prev) =>
+          prev === images.length - 1 ? 0 : prev + 1
+        );
+        setFade(true); // fade in
+      }, 200);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isHovering, images.length]);
 
   return (
     <Link
@@ -22,35 +37,38 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       className="group block"
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      <div className="bg-card rounded-2xl overflow-hidden card-glow">
-        {/* Image Container */}
+      <div
+        className="bg-card rounded-2xl overflow-hidden card-glow"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        {/* IMAGE */}
         <div className="relative aspect-square overflow-hidden bg-secondary">
           <img
-            src={product.image}
+            src={images[currentIndex]}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className={`w-full h-full object-cover transition-opacity duration-500 ${
+              fade ? "opacity-100" : "opacity-0"
+            }`}
+            loading="eager"
           />
-          {product.featured && (
-            <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full">
-              Featured
-            </span>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        {/* Content */}
+        {/* CONTENT */}
         <div className="p-5 space-y-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-primary">
+          <span className="text-xs uppercase tracking-wider text-primary">
             {product.category}
           </span>
-          <h3 className="font-display text-xl md:text-2xl tracking-wide line-clamp-1">
+
+          <h3 className="font-display text-xl line-clamp-1">
             {product.name}
           </h3>
+
           <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold">{formatPrice(product.price)}</span>
-            <span className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary transition-colors">
+            <span className="font-semibold">₹{product.price}</span>
+            <span className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary">
               View Details
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </span>
           </div>
         </div>
